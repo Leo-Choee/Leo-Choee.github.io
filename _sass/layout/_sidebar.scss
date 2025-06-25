@@ -120,6 +120,17 @@ $sidebar-display: 'sidebar-display'; /* the attribute for sidebar display */
     user-select: none;
   }
 
+  .site-subdescription {
+    font-size: 85%;
+    color: var(--site-subtitle-color);
+    margin-top: 0.25rem;
+    word-spacing: 1px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
   ul {
     margin-bottom: 2rem;
 

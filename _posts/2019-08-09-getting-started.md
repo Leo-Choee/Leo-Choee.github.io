@@ -1,15 +1,21 @@
 ---
-title: Getting Started
+title: Tutorial - Build Your Own Github Blog
 description: >-
-  Get started with Chirpy basics in this comprehensive overview.
-  You will learn how to install, configure, and use your first Chirpy-based website, as well as deploy it to a web server.
-author: cotes
-date: 2019-08-09 20:55:00 +0800
-categories: [Blogging, Tutorial]
+  Step by step tutorial
+author: leo_choee
+date: 2025-06-25
+categories: [Github, Tutorial]
 tags: [getting started]
-pin: true
+pin: false
 media_subpath: '/posts/20180809'
 ---
+
+> Based on Window 10 <br>Jekyll Chirpy theme
+
+This page includes
+1. Presetting Environment (Github, Ruby, VSCode)
+2. Applying a Theme on Blog
+3. Profile Configuration 
 
 ## Creating a Site Repository
 
