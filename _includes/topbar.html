@@ -6,38 +6,62 @@
     class="d-flex align-items-center justify-content-between px-lg-3 h-100"
   >
     <nav id="breadcrumb" aria-label="Breadcrumb">
-      {% assign paths = page.url | split: '/' %}
+  <span>
+    <a href="{{ '/' | relative_url }}">
+      {{ site.data.locales[include.lang].tabs.home | capitalize }}
+    </a>
+  </span>
 
-      {% if paths.size == 0 or page.layout == 'home' %}
-        <!-- index page -->
-        <span>{{ site.data.locales[include.lang].tabs.home | capitalize }}</span>
+  {% if page.layout == 'post' and page.categories and page.categories.size > 0 %}
+    <!-- CATEGORIES 탭 추가 -->
+    <span> &gt; </span>
+    <span>
+      <a href="/categories/">{{ site.data.locales[include.lang].tabs.categories | default: 'Categories' | capitalize }}</a>
+    </span>
 
-      {% else %}
-        {% for item in paths %}
-          {% if forloop.first %}
-            <span>
-              <a href="{{ '/' | relative_url }}">
-                {{- site.data.locales[include.lang].tabs.home | capitalize -}}
-              </a>
-            </span>
+    <!-- Top category -->
+    <span> &gt; </span>
+    {% assign top_category = page.categories[0] %}
+    <span>
+      <a href="/categories/{{ top_category | slugify }}/">{{ top_category | capitalize }}</a>
+    </span>
 
-          {% elsif forloop.last %}
-            {% if page.collection == 'tabs' %}
-              <span>{{ site.data.locales[include.lang].tabs[item] | default: page.title }}</span>
-            {% else %}
-              <span>{{ page.title }}</span>
-            {% endif %}
+    <!-- 나머지 카테고리들 -->
+    {% if page.categories.size > 1 %}
+      {% for cat in page.categories offset:1 %}
+        <span> &gt; </span>
+        <span>
+          <a href="/categories/{{ cat | slugify }}/">{{ cat | capitalize }}</a>
+        </span>
+      {% endfor %}
+    {% endif %}
 
-          {% elsif page.layout == 'category' or page.layout == 'tag' %}
-            <span>
-              <a href="{{ item | append: '/' | relative_url }}">
-                {{- site.data.locales[include.lang].tabs[item] | default: page.title -}}
-              </a>
-            </span>
-          {% endif %}
-        {% endfor %}
-      {% endif %}
-    </nav>
+    <!-- 마지막으로 포스트 타이틀 -->
+    <span> &gt; </span>
+    <span>{{ page.title }}</span>
+
+  {% else %}
+    <!-- 기존 URL 기반 breadcrumb 유지 -->
+    {% assign paths = page.url | split: '/' %}
+    {% if paths.size > 0 and page.layout != 'home' %}
+      {% for item in paths %}
+        {% if forloop.first %}
+          <!-- 홈 링크 이미 출력 -->
+        {% elsif forloop.last %}
+          <span> &gt; </span>
+          <span>{{ page.title }}</span>
+        {% else %}
+          <span> &gt; </span>
+          <span>
+            <a href="{{ item | append: '/' | relative_url }}">
+              {{ site.data.locales[include.lang].tabs[item] | default: page.title }}
+            </a>
+          </span>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  {% endif %}
+</nav>
     <!-- endof #breadcrumb -->
 
     <button type="button" id="sidebar-trigger" class="btn btn-link" aria-label="Sidebar">

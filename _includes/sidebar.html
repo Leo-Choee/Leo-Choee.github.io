@@ -28,16 +28,116 @@
       </li>
       <!-- the real tabs -->
       {% for tab in site.tabs %}
-        <li class="nav-item{% if tab.url == page.url %}{{ " active" }}{% endif %}">
-          <a href="{{ tab.url | relative_url }}" class="nav-link">
-            <i class="fa-fw {{ tab.icon }}"></i>
-            {% capture tab_name %}{{ tab.url | split: '/' }}{% endcapture %}
+        {% assign tab_title = tab.title | upcase %}
 
-            <span>{{ site.data.locales[include.lang].tabs.[tab_name] | default: tab.title | upcase }}</span>
-          </a>
-        </li>
-        <!-- .nav-item -->
+        {% if tab_title == "CATEGORIES" %}
+          <li class="nav-item">
+            <a class="nav-link w-100 d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#collapse_categories" aria-expanded="false" aria-controls="collapse_categories">
+              <span><i class="fa-fw {{ tab.icon }}"></i> {{ tab_title }}</span>
+              <i class="fas fa-angle-right rotate-on-open"></i>
+            </a>
+
+            <div id="collapse_categories" class="collapse list-group-item w-100">
+              <ul class="list-unstyled">
+                {% assign first_level_categories = "" | split: "" %}
+                {% for post in site.posts %}
+                  {% if post.categories.size > 0 and post.categories[0] and post.categories[0] != "/" and post.categories[0] != "" %}
+                    {% assign cat0 = post.categories[0] %}
+                    {% unless first_level_categories contains cat0 %}
+                      {% assign first_level_categories = first_level_categories | push: cat0 %}
+                    {% endunless %}
+                  {% endif %}
+                {% endfor %}
+                {% assign first_level_categories = first_level_categories | sort %}
+                {% assign group_index = 0 %}
+
+                {% for cat0 in first_level_categories %}
+                  {% capture collapse_id_1 %}collapse_cat_1_{{ group_index }}{% endcapture %}
+                  <li class="nav-item">
+                    <a class="nav-link w-100 d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#{{ collapse_id_1 }}" aria-expanded="false">
+                      <span>{{ cat0 | capitalize }}</span>
+                      <i class="fas fa-angle-right rotate-on-open"></i>
+                    </a>
+
+                    <div id="{{ collapse_id_1 }}" class="collapse list-group-item w-100">
+                      <ul class="list-unstyled">
+                        {% assign second_level = "" | split: "" %}
+                        {% for post in site.categories[cat0] %}
+                          {% assign cat1 = post.categories[1] %}
+                          {% if cat1 and cat1 != "/" and cat1 != "" %}
+                            {% unless second_level contains cat1 %}
+                              {% assign second_level = second_level | push: cat1 %}
+                            {% endunless %}
+                          {% endif %}
+                        {% endfor %}
+                        {% assign second_level = second_level | sort %}
+                        {% assign sub_group_index = 0 %}
+
+                        {% for cat1 in second_level %}
+                          {% capture collapse_id_2 %}collapse_cat_2_{{ group_index }}_{{ sub_group_index }}{% endcapture %}
+                          <li class="nav-item">
+                            <a class="nav-link w-100 d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#{{ collapse_id_2 }}" aria-expanded="false">
+                              <span>{{ cat1 | capitalize }}</span>
+                              <i class="fas fa-angle-right rotate-on-open"></i>
+                            </a>
+
+                            <div id="{{ collapse_id_2 }}" class="collapse list-group-item w-100">
+                              <ul class="list-unstyled">
+                                {% for post in site.categories[cat0] %}
+                                  {% if post.categories[1] == cat1 %}
+                                    <li class="nav-item">
+                                      <a href="{{ post.url | relative_url }}" class="nav-link">
+                                        {{ post.title }}
+                                      </a>
+                                    </li>
+                                  {% endif %}
+                                {% endfor %}
+                              </ul>
+                            </div>
+                          </li>
+                          {% assign sub_group_index = sub_group_index | plus: 1 %}
+                        {% endfor %}
+
+                        <!-- cat0에 속하지만 cat1이 없는 포스트 출력 -->
+                        {% for post in site.categories[cat0] %}
+                          {% if post.categories.size == 1 or post.categories[1] == nil or post.categories[1] == "" or post.categories[1] == "/" %}
+                            <li class="nav-item">
+                              <a href="{{ post.url | relative_url }}" class="nav-link">
+                                {{ post.title }}
+                              </a>
+                            </li>
+                          {% endif %}
+                        {% endfor %}
+
+                      </ul>
+                    </div>
+                  </li>
+                  {% assign group_index = group_index | plus: 1 %}
+                {% endfor %}
+              </ul>
+            </div>
+          </li>
+        {% else %}
+          <!-- 일반 탭 (HOME, ABOUT 등) -->
+          <li class="nav-item{% if tab.url == page.url %} active{% endif %}">
+            <a href="{{ tab.url | relative_url }}" class="nav-link">
+              <i class="fa-fw {{ tab.icon }}"></i>
+              {% capture tab_name %}{{ tab.url | split: '/' | last }}{% endcapture %}
+              <span>{{ site.data.locales[include.lang].tabs.[tab_name] | default: tab.title | upcase }}</span>
+            </a>
+          </li>
+        {% endif %}
       {% endfor %}
+
+      <!-- Collapse 화살표 회전 효과 CSS -->
+      <style>
+        .rotate-on-open {
+          transition: transform 0.3s ease;
+        }
+        button[aria-expanded="true"] .rotate-on-open {
+          transform: rotate(90deg);
+        }
+      </style>
     </ul>
   </nav>
 
