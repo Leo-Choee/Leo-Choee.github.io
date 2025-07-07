@@ -5,7 +5,7 @@ description: >-
 author: leo_choee
 date: 2025-06-27
 categories: [Github, Tutorial]
-tags: [getting started]
+tags: [getting started, data converter, ADC, delta-sigma-modulator, noise-transfer-function]
 pin: false
 media_subpath: '/posts/20180809'
 math: true
@@ -157,7 +157,58 @@ The result shows that the IBG is decreased, and the OBG is increased, as intende
 
 ### Spreading the zeros
 
-***Will be updated soon!***
+The NTF can be optimized further by spreading zeros in conjugate pair, $e^{\pm j\omega_z }$; ${\left(1-z^{-1} \right)}^3 \Rightarrow \omega \left(\omega^2 -\omega_z^2 \right)$. Then, in-band noise equation can be expressed as below.
+
+$$
+\mathrm{In}-\mathrm{band}\;\mathrm{noise}=\mathrm{IBG}\cdot \frac{\Delta^2 }{12\pi }\int_0^{\frac{\pi }{\mathrm{OSR}}} \omega^2 {\left(\omega^2 -\omega_z^2 \right)}^2 d\omega
+$$
+
+The conjugate pair of zero that minimizes the result of in-band noise equation can be found.
+
+```matlab
+w_max = pi / OSR;
+
+P_inbandn = @(wz) integral(@(w) w.^2 .* (w.^2 - wz.^2).^2, 0, w_max);
+
+wz_opt = fminbnd(P_inbandn, 0, w_max);
+J_min = P_inbandn(wz_opt);
+
+fprintf("Optimized ω = %.6f rad/sample\n", wz_opt); % almost same with sqrt(3/5)*pi/OSR
+fprintf("Minimum J(ω) = %.6e\n", J_min);
+```
+
+With the conjugate pair of zero, the numerator must be a form of $\left(1-z_0^{-1} \right)\left(1-z_0^{*-1} \right)=1-2\cos \left(\omega_z \right)z^{-1} +z^{-2}$. Then, let's gather all we did into one NTF and calculate the SQNR.
+
+$$
+\mathrm{NTF}\left(z\right)=\frac{\left(1-z^{-1} \right)\left(1-1\ldotp 9986z^{-1} +z^{-2} \right)=1-2\ldotp 9986z^{-1} +2\ldotp 9986z^{-2} -z^{-3} }{1-1\ldotp 459z^{-1} +0\ldotp 9104z^{-2} -0\ldotp 1978z^{-3} }
+$$
+
+```matlab
+b = [1 -2.9986 2.9986 -1]; % modified coefficients of the numerator
+sys = tf(b,a,1,'Variable','z^-1')
+OBG = polyval(b,-1)/polyval(a,-1);
+fprintf("OBG = %.2f\n", OBG);
+IBG = 1/polyval(a,1);
+fprintf("IBG = %.2f\n", IBG);
+sqnr = calculate_NTF_SQNR(b, a, vfs, OSR, N, quantizer_bit); % use the prepared function
+fprintf('SQNR = %.2f dB\n', sqnr);
+```
+
+The IBG remains unchanged at 3.94, while the OBG has decreased to 2.24, down by about 2.79 from the previous value. The resulting SQNR shows about 15 dB improvement!
+
+**Here are some key points regarding the pole-zero map:**
+1. A pole located on the x-axis near (1,0) primarily influences the low-frequency gain, so it has minimal effect on the frequency response. However, it contributes to the overall shaping of the NTF.
+2. Conjugate pairs of pole and zero must exist for the system to be realizable with real-valued coefficients.
+3. The location of zeros determines the frequency range where noise is attenuated.
+4. The distance between a pole and a nearby zero affects how sharp the filter transition is.
+5. The farther the pole is from (1, 0), the closer the 3-dB corner frequency moves toward higher frequencies.
+
+**Noticable reference, Lee's rule:** A 1-bit modulator is likely to be stable if
+$$
+\max_{\omega } \left(\left|\mathrm{NTF}\left(e^{j\omega } \right)\right|\right)<1\ldotp 5
+$$
+
+To achieve the same in-band SQNR, a single-bit quantizer deesign needs higher OSR than a multi-bit quantizer design since the error added by a single-bit quantizer is much higher. For the same reason, the maximum-stable amplitude (MSA) should reduce in a single-bit quantizer design. Even so, the limit on ${\left\|\mathrm{NTF}\right\|}_{\omega =\infty }$ doesn't have to be strictly under 1.5, more than 3 is acceptable for moderate-order modulator (3 or 4).
 
 [Understanding Delta-Sigma Data Converters]: https://ieeexplore.ieee.org/servlet/opac?bknumber=5264508
 [my git repository]: https://github.com/Leo-Choee
