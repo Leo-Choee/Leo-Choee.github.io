@@ -4,7 +4,7 @@ description: >-
   Step by step tutorial with detail explanations
 author: leo_choee
 date: 2025-06-27
-categories: [Github, Tutorial]
+categories: [Data converter, Tutorial]
 tags: [getting started, data converter, ADC, delta-sigma-modulator, noise-transfer-function]
 pin: false
 media_subpath: '/posts/20180809'
